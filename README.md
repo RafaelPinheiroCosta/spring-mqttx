@@ -1,3 +1,4 @@
+<!-- language: pt-BR -->
 # Spring MQTTx — Biblioteca para Integração MQTT com Spring Boot
 
 ## Objetivo
