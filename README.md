@@ -68,7 +68,6 @@ java 21.0.7 2025-04-15 LTS
 Java(TM) SE Runtime Environment ...
 ```
 
-```
 ### Maven
 
 A ferramenta **Maven** é usada para instalar e gerenciar dependências.  
