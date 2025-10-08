@@ -173,6 +173,59 @@ public class AssinanteHandler {
 }
 ```
 
+---
+
+## Testando com Mosquitto
+
+Antes de iniciar o projeto, certifique-se de que o **broker Mosquitto** está em execução.
+
+### 1️ - Iniciar o broker local
+
+```bash
+mosquitto
+```
+
+> Isso inicia o broker na porta padrão `1883`.
+
+---
+
+### 2️ - Abrir um terminal para publicar mensagens
+
+```bash
+mosquitto_pub -h localhost -t "topico/teste" -m "Mensagem do terminal"
+```
+
+---
+
+### 3️ - Abrir outro terminal para escutar
+
+```bash
+mosquitto_sub -h localhost -t "topico/teste"
+```
+
+Você verá as mensagens publicadas pelo seu app Java ou pelo terminal.
+
+---
+
+## Teste completo
+
+1. Inicie o **Mosquitto**
+2. Rode seu **projeto Spring Boot**
+3. Veja no console:
+   ```
+   [MQTT] Conectado ao broker tcp://localhost:1883 com clientId=app-local
+   ```
+4. Publique uma mensagem no tópico:
+   ```bash
+   mosquitto_pub -h localhost -t "topico/teste" -m "Olá do Mosquitto!"
+   ```
+5. Observe o log:
+   ```
+   Mensagem recebida: Olá do Mosquitto!
+   ```
+
+---
+
 ## Pronto!
 
 Agora seu projeto Spring Boot já pode publicar e receber mensagens MQTT de forma automática usando apenas anotações.
