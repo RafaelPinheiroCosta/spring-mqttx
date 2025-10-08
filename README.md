@@ -23,7 +23,7 @@ Ela abstrai toda a configuração e o gerenciamento do cliente MQTT, permitindo 
 
 Baixe o arquivo `spring-mqttx-0.0.1.jar` disponível neste repositório.
 
-Coloque-o dentro da pasta principal do seu projeto (por exemplo: `libs/` ou `target/`).
+Coloque-o dentro de uma pasta (exemplo: `C:\Users\SeuUsuario\Downloads`)).
 
 ---
 
@@ -32,10 +32,10 @@ Coloque-o dentro da pasta principal do seu projeto (por exemplo: `libs/` ou `tar
 Abra o **Prompt de Comando (cmd)** e vá até a pasta onde está o `.jar`:
 
 ```bash
-cd caminho/para/seu/projeto
+cd C:\Users\SeuUsuario\Downloads
 ```
 
-Execute o comando abaixo (ajuste o caminho do arquivo se necessário):
+Execute o comando abaixo:
 
 ```bash
 mvn install:install-file ^
@@ -51,39 +51,50 @@ Isso irá copiar a biblioteca para o repositório Maven local (`~/.m2/repository
 
 ---
 
-### 3️ - Configurar o Maven (se não estiver no PATH)
+## Pré-requisitos
 
-Se o comando `mvn` não for reconhecido, configure o **Maven do IntelliJ IDEA**:
+### Java
+
+A biblioteca requer **Java 17+** (recomendado Java 21).  
+Certifique-se de que o Java está instalado e configurado no PATH:
+
+```bash
+java --version
+```
+
+Saída esperada:
+```
+java 21.0.7 2025-04-15 LTS
+Java(TM) SE Runtime Environment ...
+```
+
+```
+### Maven
+
+A ferramenta **Maven** é usada para instalar e gerenciar dependências.  
+Verifique se o Maven está configurado corretamente:
+
+```bash
+mvn -v
+```
+
+Se o comando não for reconhecido, configure o Maven do IntelliJ:
 
 1. Abra o IntelliJ → `File > Settings > Build, Execution, Deployment > Build Tools > Maven`
-2. Copie o caminho do Maven embutido, normalmente:
+2. Copie o caminho do Maven embutido, ex:
    ```
    C:\Program Files\JetBrains\IntelliJ IDEA Community Edition 2025.1.3\plugins\maven\lib\maven3\bin
    ```
-3. Adicione esse caminho às variáveis de ambiente do Windows:
-   - Pesquise **“Variáveis de ambiente”**
-   - Clique em **Editar variáveis de ambiente do sistema**
-   - Em “Variáveis do sistema” → clique em **Novo**
-     - Nome: `MAVEN_HOME`
-     - Valor: caminho do Maven embutido
-   - Edite a variável `Path` e adicione:
-     ```
-     %MAVEN_HOME%
-     ```
-
-4. Feche e reabra o cmd e teste:
+3. Adicione o caminho às **variáveis de ambiente**:
+   - Nome: `MAVEN_HOME`
+   - Valor: caminho copiado
+   - Edite `Path` e adicione `%MAVEN_HOME%`
+4. Feche e reabra o terminal, então teste novamente:
    ```bash
    mvn -v
    ```
 
-Deve aparecer algo como:
-```
-Apache Maven 3.9.11
-Java version: 21.0.7
-```
-
 ---
-
 ### 4️ - Adicionar a dependência no `pom.xml` do projeto
 
 Depois da instalação local, basta adicionar a dependência normalmente:
