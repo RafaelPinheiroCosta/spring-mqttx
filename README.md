@@ -94,7 +94,7 @@ Se o comando não for reconhecido, configure o Maven do IntelliJ:
    ```
 
 ---
-### 4️ - Adicionar a dependência no `pom.xml` do projeto
+### 3 - Adicionar a dependência no `pom.xml` do projeto
 
 Depois da instalação local, basta adicionar a dependência normalmente:
 
