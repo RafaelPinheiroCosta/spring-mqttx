@@ -1,6 +1,6 @@
-# 📦 Spring MQTTx — Biblioteca para Integração MQTT com Spring Boot
+# Spring MQTTx — Biblioteca para Integração MQTT com Spring Boot
 
-## 🚀 Objetivo
+## Objetivo
 
 A **Spring MQTTx** é uma biblioteca desenvolvida para facilitar a comunicação entre aplicações Spring Boot e brokers MQTT como **Mosquitto** e **EMQX**, usando uma abordagem **de anotações (@MqttPublisher e @MqttSubscriber)**.
 
@@ -8,7 +8,7 @@ Ela abstrai toda a configuração e o gerenciamento do cliente MQTT, permitindo 
 
 ---
 
-## 🧩 Estrutura e funcionalidades
+## Estrutura e funcionalidades
 
 - **@MqttPublisher** → Publica mensagens automaticamente após a execução de um método.
 - **@MqttSubscriber** → Assina tópicos MQTT e direciona mensagens para métodos anotados.
@@ -17,17 +17,17 @@ Ela abstrai toda a configuração e o gerenciamento do cliente MQTT, permitindo 
 
 ---
 
-## ⚙️ Instalação local (sem precisar de repositório remoto)
+## Instalação local (sem precisar de repositório remoto)
 
-### 1️⃣ Baixar o `.jar`
+### 1️ - Baixar o `.jar`
 
-Baixe o arquivo `spring-mqttx-1.0.0.jar` disponível neste repositório.
+Baixe o arquivo `spring-mqttx-0.0.1.jar` disponível neste repositório.
 
 Coloque-o dentro da pasta principal do seu projeto (por exemplo: `libs/` ou `target/`).
 
 ---
 
-### 2️⃣ Instalar o `.jar` no Maven local
+### 2️ - Instalar o `.jar` no Maven local
 
 Abra o **Prompt de Comando (cmd)** e vá até a pasta onde está o `.jar`:
 
@@ -51,7 +51,7 @@ Isso irá copiar a biblioteca para o repositório Maven local (`~/.m2/repository
 
 ---
 
-### 3️⃣ Configurar o Maven (se não estiver no PATH)
+### 3️ - Configurar o Maven (se não estiver no PATH)
 
 Se o comando `mvn` não for reconhecido, configure o **Maven do IntelliJ IDEA**:
 
@@ -84,7 +84,7 @@ Java version: 21.0.7
 
 ---
 
-### 4️⃣ Adicionar a dependência no `pom.xml` do projeto
+### 4️ - Adicionar a dependência no `pom.xml` do projeto
 
 Depois da instalação local, basta adicionar a dependência normalmente:
 
@@ -98,7 +98,7 @@ Depois da instalação local, basta adicionar a dependência normalmente:
 
 ---
 
-## ⚙️ Configuração no `application.properties`
+## Configuração no `application.properties`
 
 Defina as propriedades de conexão com o broker MQTT:
 
@@ -128,12 +128,12 @@ mqtt.default-qos=1
 
 ---
 
-## 💻 Exemplo de uso no código
+## Exemplo de uso no código
 
 ### Publicar mensagens
 
 ```java
-import com.rafaelcosta.modelo_comunicacao_mqtt.domain.annotation.MqttPublisher;
+import com.rafaelcosta.spring_mqttx.domain.annotation.MqttPublisher;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -149,8 +149,8 @@ public class PublicadorService {
 ### Receber mensagens
 
 ```java
-import com.rafaelcosta.modelo_comunicacao_mqtt.domain.annotation.MqttSubscriber;
-import com.rafaelcosta.modelo_comunicacao_mqtt.domain.annotation.MqttPayload;
+import com.rafaelcosta.spring_mqttx.domain.annotation.MqttSubscriber;
+import com.rafaelcosta.spring_mqttx.domain.annotation.MqttPayload;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -163,9 +163,7 @@ public class AssinanteHandler {
 }
 ```
 
----
-
-## ✅ Pronto!
+## Pronto!
 
 Agora seu projeto Spring Boot já pode publicar e receber mensagens MQTT de forma automática usando apenas anotações.
 
