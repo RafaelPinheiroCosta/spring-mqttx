@@ -12,6 +12,7 @@
 - Java 17 ou superior
 - Spring Boot 3.3+ ou 4.x
 - Broker MQTT compatível com Eclipse Paho
+- 
 
 ## Dependência
 
@@ -30,6 +31,87 @@ Adicione o repositório GitHub Packages e o starter da biblioteca no projeto con
     <artifactId>spring-mqttx-starter</artifactId>
     <version>2.0.0</version>
 </dependency>
+```
+
+## Uso do script em anexo para instalar a dependência
+
+Como a biblioteca está publicada no **GitHub Packages**, o Maven precisa se autenticar para conseguir **baixar** a dependência.
+
+Em vez de pedir que o usuário edite manualmente o `settings.xml` do Maven, a biblioteca disponibiliza scripts que fazem isso de forma **temporária**, apenas durante o comando executado.
+
+Esses scripts existem para:
+
+1. solicitar seu usuário do GitHub;
+2. solicitar seu token do GitHub;
+3. criar temporariamente um arquivo de autenticação do Maven;
+4. executar o comando Maven para baixar a biblioteca e continuar o build;
+5. remover automaticamente o arquivo temporário ao final.
+
+Isso evita deixar credenciais salvas permanentemente na máquina, o que é especialmente importante em computadores compartilhados.
+
+## Passo a passo para baixar a biblioteca com o script
+
+### 1. Adicione primeiro o repositório e a dependência no `pom.xml`
+
+Antes de executar qualquer script, o seu projeto já deve conter:
+
+- o bloco `<repositories>` apontando para o GitHub Packages;
+- a dependência `spring-mqttx-starter`.
+
+Sem isso, o Maven não saberá de onde baixar a biblioteca.
+
+### 2. Gere um token no GitHub
+
+Você precisa de um **Personal Access Token (classic)** para o GitHub Packages.
+
+Caminho geral no GitHub:
+
+- **Settings**
+- **Developer settings**
+- **Personal access tokens**
+- **Tokens (classic)**
+- **Generate new token (classic)**
+
+Permissão mínima recomendada para o uso da biblioteca:
+
+- `read:packages`
+
+Se o repositório que publica a biblioteca for privado, o seu usuário também precisa ter acesso a ele.
+
+### 3. Execute o script correspondente ao seu sistema operacional
+
+Copie o arquivo que esta no seguinte link e cole na raiz do seu projeto:
+windows: https://github.com/RafaelPinheiroCosta/spring-mqttx/blob/master/use-github-packages.ps1
+linux/macOS: https://github.com/RafaelPinheiroCosta/spring-mqttx/blob/master/use-github-packages.sh
+
+O script irá:
+
+- pedir seu usuário do GitHub;
+- pedir seu token;
+- gerar um arquivo temporário de autenticação;
+- executar o Maven;
+- apagar esse arquivo automaticamente ao final.
+
+### Windows
+
+Exemplo para baixar dependências e compilar o projeto:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\use-github-packages.ps1 -- .\mvnw.cmd clean compile
+```
+
+### Linux/macOS
+
+Dê permissão de execução uma vez:
+
+```bash
+chmod +x scripts/use-github-packages.sh
+```
+
+Depois execute, por exemplo, para compilar:
+
+```bash
+./scripts/use-github-packages.sh ./mvnw clean compile
 ```
 
 ## Configuração
@@ -155,84 +237,6 @@ A biblioteca resolve parâmetros de métodos anotados com `@MqttSubscriber` da s
 3. Métodos anotados com `@MqttSubscriber` são encontrados no contexto Spring e registrados no `MqttHandlerRegistry`.
 4. O callback do cliente MQTT envia mensagens recebidas para o `MqttMessageDispatcher`.
 5. Métodos anotados com `@MqttPublisher` publicam o retorno automaticamente por meio do `MqttPublishingGateway`.
-
-## Uso do script em anexo para instalar a dependência
-
-Como a biblioteca está publicada no **GitHub Packages**, o Maven precisa se autenticar para conseguir **baixar** a dependência.
-
-Em vez de pedir que o usuário edite manualmente o `settings.xml` do Maven, a biblioteca disponibiliza scripts que fazem isso de forma **temporária**, apenas durante o comando executado.
-
-Esses scripts existem para:
-
-1. solicitar seu usuário do GitHub;
-2. solicitar seu token do GitHub;
-3. criar temporariamente um arquivo de autenticação do Maven;
-4. executar o comando Maven para baixar a biblioteca e continuar o build;
-5. remover automaticamente o arquivo temporário ao final.
-
-Isso evita deixar credenciais salvas permanentemente na máquina, o que é especialmente importante em computadores compartilhados.
-
-## Passo a passo para baixar a biblioteca com o script
-
-### 1. Adicione primeiro o repositório e a dependência no `pom.xml`
-
-Antes de executar qualquer script, o seu projeto já deve conter:
-
-- o bloco `<repositories>` apontando para o GitHub Packages;
-- a dependência `spring-mqttx-starter`.
-
-Sem isso, o Maven não saberá de onde baixar a biblioteca.
-
-### 2. Gere um token no GitHub
-
-Você precisa de um **Personal Access Token (classic)** para o GitHub Packages.
-
-Caminho geral no GitHub:
-
-- **Settings**
-- **Developer settings**
-- **Personal access tokens**
-- **Tokens (classic)**
-- **Generate new token (classic)**
-
-Permissão mínima recomendada para o uso da biblioteca:
-
-- `read:packages`
-
-Se o repositório que publica a biblioteca for privado, o seu usuário também precisa ter acesso a ele.
-
-### 3. Execute o script correspondente ao seu sistema operacional
-
-O script irá:
-
-- pedir seu usuário do GitHub;
-- pedir seu token;
-- gerar um arquivo temporário de autenticação;
-- executar o Maven;
-- apagar esse arquivo automaticamente ao final.
-
-### Windows
-
-Exemplo para baixar dependências e compilar o projeto:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\use-github-packages.ps1 -- .\mvnw.cmd clean compile
-```
-
-### Linux/macOS
-
-Dê permissão de execução uma vez:
-
-```bash
-chmod +x scripts/use-github-packages.sh
-```
-
-Depois execute, por exemplo, para compilar:
-
-```bash
-./scripts/use-github-packages.sh ./mvnw clean compile
-```
-
 
 ## GitHub Actions
 
