@@ -189,7 +189,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class SensorPublisher {
 
-    @MqttPublisher(value = "sensores/status", qos = 1)
+    @MqttPublisher("sensores/status")
     public SensorStatus gerarStatus() {
         return new SensorStatus("ok", 22.5);
     }
@@ -212,7 +212,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SensorSubscriber {
 
-    @MqttSubscriber(value = "sensores/status", qos = 1)
+    @MqttSubscriber("sensores/status")
     public void receber(@MqttPayload SensorStatus payload) {
         System.out.println(payload.status());
     }
