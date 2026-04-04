@@ -81,8 +81,9 @@ Se o repositório que publica a biblioteca for privado, o seu usuário também p
 ### 3. Execute o script correspondente ao seu sistema operacional
 
 Copie o arquivo que esta no seguinte link e cole na raiz do seu projeto:
-windows: https://github.com/RafaelPinheiroCosta/spring-mqttx/blob/master/use-github-packages.ps1
-linux/macOS: https://github.com/RafaelPinheiroCosta/spring-mqttx/blob/master/use-github-packages.sh
+
+- windows: https://github.com/RafaelPinheiroCosta/spring-mqttx/blob/master/use-github-packages.ps1;
+- linux/macOS: https://github.com/RafaelPinheiroCosta/spring-mqttx/blob/master/use-github-packages.sh;
 
 O script irá:
 
