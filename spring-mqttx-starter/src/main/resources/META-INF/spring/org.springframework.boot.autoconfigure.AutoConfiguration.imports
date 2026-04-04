@@ -1,0 +1,3 @@
+com.rafaelcosta.spring_mqttx.infrastructure.mqtt.MqttAutoConfiguration
+com.rafaelcosta.spring_mqttx.infrastructure.mqtt.MqttJackson2AutoConfiguration
+com.rafaelcosta.spring_mqttx.infrastructure.mqtt.MqttJackson3AutoConfiguration

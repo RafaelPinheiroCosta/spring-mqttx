@@ -1,0 +1,63 @@
+name: Verify and Publish
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+  release:
+    types: [published]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - java: '17'
+            spring_boot: '3.5.6'
+          - java: '21'
+            spring_boot: '3.5.6'
+          - java: '17'
+            spring_boot: '4.0.5'
+          - java: '25'
+            spring_boot: '4.0.5'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+
+      - name: Grant execute permission to Maven Wrapper
+        run: chmod +x ./mvnw
+
+      - name: Build
+        run: ./mvnw -B -Dspring.boot.version=${{ matrix.spring_boot }} clean verify
+
+  publish:
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          server-id: github
+
+      - name: Publish to GitHub Packages
+        run: ./mvnw -B -DskipTests deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
