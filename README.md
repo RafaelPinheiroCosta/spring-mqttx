@@ -12,7 +12,6 @@
 - Java 17 ou superior
 - Spring Boot 3.3+ ou 4.x
 - Broker MQTT compatível com Eclipse Paho
-- 
 
 ## Dependência
 
@@ -75,8 +74,6 @@ Caminho geral no GitHub:
 Permissão mínima recomendada para o uso da biblioteca:
 
 - `read:packages`
-
-Se o repositório que publica a biblioteca for privado, o seu usuário também precisa ter acesso a ele.
 
 ### 3. Execute o script correspondente ao seu sistema operacional
 
@@ -260,28 +257,6 @@ O projeto já possui testes automatizados para os componentes centrais da biblio
 - invocação de handlers Spring;
 - carregamento da auto-configuração.
 
-## Conclusão
-
-A proposta da biblioteca é simplificar a integração MQTT em aplicações Spring Boot sem esconder a base técnica usada internamente.
-
-Ela se apoia no **Eclipse Paho** para a comunicação MQTT e no **Jackson** para conversão de payloads, enquanto o Spring Boot fornece a auto-configuração, AOP e a integração com o contexto da aplicação.
-
-Mesmo com essa abstração, o uso em produção exige validação técnica. É importante testar:
-
-- conexão com o broker;
-- serialização e desserialização dos payloads;
-- recebimento correto em subscribers;
-- publicação correta em publishers;
-- comportamento de reconexão;
-- compatibilidade com a versão de Java e Spring Boot adotada no projeto.
-
-Em outras palavras, a biblioteca reduz código repetitivo e organiza a integração, mas não substitui testes de integração, testes com broker real e validação do cenário específico da aplicação.
-
-## Licença
-
-Este projeto está licenciado sob a licença MIT. Consulte o arquivo `LICENSE`.
-
-
 ## Logs opcionais por grupo
 
 A biblioteca expõe grupos de logs opcionais, todos desabilitados por padrão. Os logs indispensáveis de ciclo de vida, conexão, falhas operacionais e reconexão continuam ativos em `INFO`, `WARN` ou `ERROR`.
@@ -321,3 +296,142 @@ Grupos disponíveis:
 - `mqtt.logs.payload`: preview do conteúdo do payload em `TRACE`
 - `mqtt.logs.dispatch`: despacho das mensagens para handlers
 - `mqtt.logs.invocation`: resolução de argumentos e invocação dos métodos anotados
+
+## Teste rápido da biblioteca
+
+Para testar a biblioteca, crie primeiro um projeto Spring Boot simples e adicione a dependência da biblioteca no `pom.xml`.
+
+Depois disso, tenha um broker MQTT local instalado. Para os testes iniciais, pode usar o Mosquitto.
+
+Com o broker rodando localmente, configure sua aplicação para conectar nele:
+
+```properties
+mqtt.broker-url=tcp://localhost:1883
+mqtt.client-id=teste-app
+```
+
+Agora crie uma classe de teste como esta:
+
+```java
+@RestController
+@RequestMapping("/mqtt")
+public class TesteMqtt {
+
+    @PostMapping("/publish")
+    @MqttPublisher("sensores/rest/status")
+    public SensorStatus gerarStatus() {
+        return new SensorStatus("ok", 22.5);
+    }
+
+    @MqttSubscriber("sensores/mqtt/status")
+    public void receber(@MqttPayload SensorStatus payload) {
+        System.out.println(payload);
+    }
+
+    public record SensorStatus(String status, double temperatura) {}
+}
+```
+
+### O que esse exemplo faz
+
+O método `gerarStatus()` recebe uma requisição HTTP POST e publica automaticamente o retorno no tópico MQTT `sensores/rest/status`.
+
+O método `receber()` fica inscrito no tópico `sensores/mqtt/status` e imprime no console toda mensagem recebida e convertida para o tipo `SensorStatus`.
+
+---
+
+## Testando a inscrição em tópico
+
+Para testar se a aplicação está realmente inscrita no tópico `sensores/mqtt/status`, envie uma mensagem manualmente pelo terminal.
+
+### Windows - CMD
+
+```cmd
+mosquitto_pub -h localhost -t sensores/mqtt/status -m "{\"status\":\"ok\",\"temperatura\":25.0}"
+```
+
+### Windows - PowerShell
+
+```powershell
+mosquitto_pub -h localhost -t sensores/mqtt/status -m '{"status":"ok","temperatura":25.0}'
+```
+
+### Linux
+
+```bash
+mosquitto_pub -h localhost -t sensores/mqtt/status -m '{"status":"ok","temperatura":25.0}'
+```
+
+Se tudo estiver correto, a aplicação receberá a mensagem e imprimirá no console algo como:
+
+```text
+SensorStatus[status=ok, temperatura=25.0]
+```
+
+---
+
+## Testando a publicação MQTT
+
+Para testar a publicação, abra uma janela de terminal separada e fique escutando o tópico `sensores/rest/status`.
+
+### Windows
+
+```cmd
+mosquitto_sub -h localhost -t sensores/rest/status
+```
+
+### Linux
+
+```bash
+mosquitto_sub -h localhost -t sensores/rest/status
+```
+
+Deixe essa janela aberta.
+
+Agora, com a aplicação rodando, use o Postman para fazer uma requisição:
+
+- método: POST
+- URL: http://localhost:8080/mqtt/publish
+
+Quando a requisição for executada, o método `gerarStatus()` será chamado, e o retorno será publicado no tópico MQTT `sensores/rest/status`.
+
+Na janela onde o `mosquitto_sub` está rodando, você verá a mensagem recebida.
+
+---
+
+## Resumo do teste
+
+Use o `mosquitto_pub` para testar se a aplicação consegue receber mensagens MQTT.
+
+Use o `mosquitto_sub` junto com o Postman para testar se a aplicação consegue publicar mensagens MQTT.
+
+Assim você valida, de forma simples:
+
+- consumo de mensagens MQTT
+- publicação de mensagens MQTT
+- serialização e desserialização do payload
+- funcionamento das anotações `@MqttSubscriber` e `@MqttPublisher`
+
+
+## Conclusão
+
+A proposta da biblioteca é simplificar a integração MQTT em aplicações Spring Boot sem esconder a base técnica usada internamente.
+
+Ela se apoia no **Eclipse Paho** para a comunicação MQTT e no **Jackson** para conversão de payloads, enquanto o Spring Boot fornece a auto-configuração, AOP e a integração com o contexto da aplicação.
+
+Mesmo com essa abstração, o uso em produção exige validação técnica. É importante testar:
+
+- conexão com o broker;
+- serialização e desserialização dos payloads;
+- recebimento correto em subscribers;
+- publicação correta em publishers;
+- comportamento de reconexão;
+- compatibilidade com a versão de Java e Spring Boot adotada no projeto.
+
+Em outras palavras, a biblioteca reduz código repetitivo e organiza a integração, mas não substitui testes de integração, testes com broker real e validação do cenário específico da aplicação.
+
+## Licença
+
+Este projeto está licenciado sob a licença MIT. Consulte o arquivo `LICENSE`.
+
+
