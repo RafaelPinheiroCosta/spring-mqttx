@@ -56,6 +56,11 @@ jobs:
           distribution: temurin
           java-version: '17'
           server-id: github
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+
+      - name: Grant execute permission to Maven Wrapper
+        run: chmod +x ./mvnw
 
       - name: Publish to GitHub Packages
         run: ./mvnw -B -DskipTests deploy
