@@ -95,7 +95,7 @@ O script irá:
 Exemplo para baixar dependências e compilar o projeto:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\use-github-packages.ps1 -- .\mvnw.cmd clean compile
+powershell -ExecutionPolicy Bypass -File use-github-packages.ps1 -- ".\mvnw.cmd clean compile"
 ```
 
 ### Linux/macOS
@@ -103,13 +103,13 @@ powershell -ExecutionPolicy Bypass -File .\scripts\use-github-packages.ps1 -- .\
 Dê permissão de execução uma vez:
 
 ```bash
-chmod +x scripts/use-github-packages.sh
+chmod +x use-github-packages.sh
 ```
 
 Depois execute, por exemplo, para compilar:
 
 ```bash
-./scripts/use-github-packages.sh ./mvnw clean compile
+use-github-packages.sh ./mvnw clean compile
 ```
 
 ## Configuração
