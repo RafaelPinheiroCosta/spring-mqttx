@@ -112,6 +112,8 @@ public class MqttProperties {
         private String trustStoreLocation;
         private String trustStorePassword;
         private String trustStoreType = "PKCS12";
+        private String trustCertificateLocation;
+        private String trustCertificateFormat = "AUTO";
         private String keyStoreLocation;
         private String keyStorePassword;
         private String keyStoreType = "PKCS12";
@@ -125,7 +127,6 @@ public class MqttProperties {
             this.enabled = enabled;
         }
 
-
         public String getProtocol() {
             return protocol;
         }
@@ -133,6 +134,7 @@ public class MqttProperties {
         public void setProtocol(String protocol) {
             this.protocol = protocol;
         }
+
         public String getTrustStoreLocation() {
             return trustStoreLocation;
         }
@@ -155,6 +157,22 @@ public class MqttProperties {
 
         public void setTrustStoreType(String trustStoreType) {
             this.trustStoreType = trustStoreType;
+        }
+
+        public String getTrustCertificateLocation() {
+            return trustCertificateLocation;
+        }
+
+        public void setTrustCertificateLocation(String trustCertificateLocation) {
+            this.trustCertificateLocation = trustCertificateLocation;
+        }
+
+        public String getTrustCertificateFormat() {
+            return trustCertificateFormat;
+        }
+
+        public void setTrustCertificateFormat(String trustCertificateFormat) {
+            this.trustCertificateFormat = trustCertificateFormat;
         }
 
         public String getKeyStoreLocation() {

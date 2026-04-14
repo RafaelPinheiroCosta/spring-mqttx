@@ -79,12 +79,13 @@ public class MqttSubscriberProcessor implements SmartLifecycle {
             );
 
             methods.forEach((method, annotation) -> {
+                MqttSubscriptionDefinition subscription = new MqttSubscriptionDefinition(annotation.value(), annotation.qos());
                 if (logSettings.isRegistryEnabled() && log.isDebugEnabled()) {
-                    log.debug("Metodo subscriber MQTT encontrado: bean='{}', metodo='{}', topico='{}', qos={}",
-                            beanName, method.getName(), annotation.value(), annotation.qos());
+                    log.debug("Metodo subscriber MQTT encontrado: bean='{}', metodo='{}', topico='{}', filtro='{}', qos={}",
+                            beanName, method.getName(), subscription.topic(), subscription.subscriptionFilter(), subscription.qos());
                 }
                 handlerRegistry.register(
-                        new MqttSubscriptionDefinition(annotation.value(), annotation.qos()),
+                        subscription,
                         new SpringMqttMethodHandler(applicationContext, beanName, method, payloadSerializer, logSettings)
                 );
             });
@@ -93,9 +94,10 @@ public class MqttSubscriberProcessor implements SmartLifecycle {
 
     private void subscribeTopics() {
         for (MqttSubscriptionDefinition subscription : handlerRegistry.getHandlers().keySet()) {
-            clientOperations.subscribe(subscription.topic(), subscription.qos());
+            clientOperations.subscribe(subscription.subscriptionFilter(), subscription.qos());
             if (logSettings.isSubscriptionEnabled() && log.isDebugEnabled()) {
-                log.debug("Inscricao MQTT concluida: topico='{}', qos={}", subscription.topic(), subscription.qos());
+                log.debug("Inscricao MQTT concluida: topico='{}', filtro='{}', qos={}",
+                        subscription.topic(), subscription.subscriptionFilter(), subscription.qos());
             }
         }
     }

@@ -6,6 +6,7 @@ import com.rafaelcosta.spring_mqttx.core.logging.MqttPayloadLogFormatter;
 import com.rafaelcosta.spring_mqttx.core.model.MqttInboundMessage;
 import com.rafaelcosta.spring_mqttx.core.serialization.PayloadSerializer;
 import com.rafaelcosta.spring_mqttx.domain.annotation.MqttPayload;
+import com.rafaelcosta.spring_mqttx.domain.annotation.MqttTopicParam;
 import com.rafaelcosta.spring_mqttx.domain.exception.MqttHandlerException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.slf4j.Logger;
@@ -75,6 +76,10 @@ public class SpringMqttMethodHandler implements MqttMessageHandler {
             if (parameter.isAnnotationPresent(MqttPayload.class)) {
                 args[i] = payloadSerializer.read(inboundMessage.message().getPayload(), parameter.getType());
                 logParameterResolution(targetMethod, parameter, "@MqttPayload", args[i]);
+            } else if (parameter.isAnnotationPresent(MqttTopicParam.class)) {
+                MqttTopicParam annotation = parameter.getAnnotation(MqttTopicParam.class);
+                args[i] = resolveTopicParamValue(parameter, annotation, inboundMessage);
+                logParameterResolution(targetMethod, parameter, "@MqttTopicParam", args[i]);
             } else if (parameter.getType().equals(String.class)) {
                 args[i] = payloadSerializer.asString(inboundMessage.message().getPayload());
                 logParameterResolution(targetMethod, parameter, "String", args[i]);
@@ -100,6 +105,48 @@ public class SpringMqttMethodHandler implements MqttMessageHandler {
         }
 
         return args;
+    }
+
+    private Object resolveTopicParamValue(Parameter parameter,
+                                          MqttTopicParam annotation,
+                                          MqttInboundMessage inboundMessage) {
+        String value = inboundMessage.topicParameters().get(annotation.value());
+        if (value == null) {
+            return null;
+        }
+        Class<?> targetType = parameter.getType();
+        try {
+            if (targetType.equals(String.class)) {
+                return value;
+            }
+            if (targetType.equals(Integer.class) || targetType.equals(int.class)) {
+                return Integer.parseInt(value);
+            }
+            if (targetType.equals(Long.class) || targetType.equals(long.class)) {
+                return Long.parseLong(value);
+            }
+            if (targetType.equals(Boolean.class) || targetType.equals(boolean.class)) {
+                return Boolean.parseBoolean(value);
+            }
+            if (targetType.equals(Double.class) || targetType.equals(double.class)) {
+                return Double.parseDouble(value);
+            }
+            if (targetType.equals(Float.class) || targetType.equals(float.class)) {
+                return Float.parseFloat(value);
+            }
+            if (targetType.equals(Short.class) || targetType.equals(short.class)) {
+                return Short.parseShort(value);
+            }
+            if (targetType.equals(Byte.class) || targetType.equals(byte.class)) {
+                return Byte.parseByte(value);
+            }
+        } catch (RuntimeException ex) {
+            throw new MqttHandlerException("Falha ao converter placeholder MQTT '" + annotation.value() + "' para o tipo " + targetType.getName(), ex);
+        }
+
+        log.warn("Tipo nao suportado para @MqttTopicParam. bean='{}', metodo='{}', parametro='{}', tipo='{}'. Valor String sera injetado se compativel.",
+                beanName, method.getName(), parameter.getName(), parameter.getType().getName());
+        return value;
     }
 
     private void logParameterResolution(Method targetMethod, Parameter parameter, String strategy, Object resolvedValue) {

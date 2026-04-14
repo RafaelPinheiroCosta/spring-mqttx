@@ -21,9 +21,15 @@ public class DefaultMqttClientFactory implements MqttClientFactory {
     private static final Logger log = LoggerFactory.getLogger(DefaultMqttClientFactory.class);
 
     private final MqttProperties properties;
+    private final TrustMaterialBuilder trustMaterialBuilder;
 
     public DefaultMqttClientFactory(MqttProperties properties) {
+        this(properties, new TrustMaterialBuilder(new CertificateResourceLoader()));
+    }
+
+    DefaultMqttClientFactory(MqttProperties properties, TrustMaterialBuilder trustMaterialBuilder) {
         this.properties = properties;
+        this.trustMaterialBuilder = trustMaterialBuilder;
     }
 
     @Override
@@ -64,10 +70,12 @@ public class DefaultMqttClientFactory implements MqttClientFactory {
         }
 
         if (properties.getSsl().isEnabled()) {
-            log.info("SSL MQTT habilitado: protocolo='{}', trustStore='{}', trustStoreType='{}', clientCert='{}'",
+            log.info("SSL MQTT habilitado: protocolo='{}', trustStore='{}', trustStoreType='{}', trustCertificate='{}', trustCertificateFormat='{}', clientCert='{}'",
                     properties.getSsl().getProtocol(),
                     properties.getSsl().getTrustStoreLocation(),
                     properties.getSsl().getTrustStoreType(),
+                    properties.getSsl().getTrustCertificateLocation(),
+                    properties.getSsl().getTrustCertificateFormat(),
                     hasText(properties.getSsl().getKeyStoreLocation()) ? properties.getSsl().getKeyStoreLocation() : "desabilitado");
             if (hasText(properties.getSsl().getKeyStoreLocation())) {
                 log.info("Autenticacao MQTT por certificado de cliente (mTLS) habilitada: keyStore='{}', keyStoreType='{}'",
@@ -92,22 +100,11 @@ public class DefaultMqttClientFactory implements MqttClientFactory {
     }
 
     private TrustManagerFactory buildTrustManagerFactory() throws Exception {
-        if (!hasText(properties.getSsl().getTrustStoreLocation())) {
-            log.info("Nenhum trustStore MQTT customizado informado. Sera utilizado o truststore padrao da JVM.");
-            return null;
+        TrustManagerFactory trustManagerFactory = trustMaterialBuilder.build(properties.getSsl());
+        if (trustManagerFactory == null) {
+            log.info("Nenhum trust material MQTT customizado informado. Sera utilizado o truststore padrao da JVM.");
         }
-
-        Resource resource = new DefaultResourceLoader().getResource(properties.getSsl().getTrustStoreLocation());
-        try (InputStream inputStream = resource.getInputStream()) {
-            KeyStore trustStore = KeyStore.getInstance(properties.getSsl().getTrustStoreType());
-            char[] trustStorePassword = properties.getSsl().getTrustStorePassword() != null
-                    ? properties.getSsl().getTrustStorePassword().toCharArray()
-                    : null;
-            trustStore.load(inputStream, trustStorePassword);
-            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            trustManagerFactory.init(trustStore);
-            return trustManagerFactory;
-        }
+        return trustManagerFactory;
     }
 
     private KeyManagerFactory buildKeyManagerFactory() throws Exception {

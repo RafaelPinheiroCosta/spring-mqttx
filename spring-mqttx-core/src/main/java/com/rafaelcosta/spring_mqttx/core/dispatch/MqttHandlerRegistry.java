@@ -3,6 +3,7 @@ package com.rafaelcosta.spring_mqttx.core.dispatch;
 import com.rafaelcosta.spring_mqttx.core.handler.MqttMessageHandler;
 import com.rafaelcosta.spring_mqttx.core.logging.MqttLogSettings;
 import com.rafaelcosta.spring_mqttx.core.model.MqttSubscriptionDefinition;
+import com.rafaelcosta.spring_mqttx.core.topic.TopicMatchResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,8 +33,8 @@ public class MqttHandlerRegistry {
         registeredHandlers.add(handler);
 
         if (logSettings.isRegistryEnabled() && log.isDebugEnabled()) {
-            log.debug("Handler MQTT registrado: topico='{}', qos={}, totalHandlersNoTopico={}",
-                    subscription.topic(), subscription.qos(), registeredHandlers.size());
+            log.debug("Handler MQTT registrado: topico='{}', filtro='{}', qos={}, totalHandlersNoTopico={}",
+                    subscription.topic(), subscription.subscriptionFilter(), subscription.qos(), registeredHandlers.size());
         }
     }
 
@@ -42,15 +43,26 @@ public class MqttHandlerRegistry {
     }
 
     public List<MqttMessageHandler> getHandlersByTopic(String topic) {
-        List<MqttMessageHandler> matchedHandlers = handlers.entrySet().stream()
-                .filter(entry -> entry.getKey().topic().equals(topic))
-                .findFirst()
-                .map(Map.Entry::getValue)
-                .orElseGet(List::of);
+        return findHandlerMatches(topic).stream().map(MqttHandlerMatch::handler).toList();
+    }
+
+    public List<MqttHandlerMatch> findHandlerMatches(String topic) {
+        List<MqttHandlerMatch> matches = new ArrayList<>();
+
+        for (Map.Entry<MqttSubscriptionDefinition, List<MqttMessageHandler>> entry : handlers.entrySet()) {
+            TopicMatchResult matchResult = entry.getKey().match(topic);
+            if (!matchResult.matched()) {
+                continue;
+            }
+            for (MqttMessageHandler handler : entry.getValue()) {
+                matches.add(new MqttHandlerMatch(entry.getKey(), handler, matchResult));
+            }
+        }
 
         if (logSettings.isDispatchEnabled() && log.isTraceEnabled()) {
-            log.trace("Consulta de handlers por topico='{}' retornou {} handler(s).", topic, matchedHandlers.size());
+            log.trace("Consulta de handlers por topico='{}' retornou {} handler(s).", topic, matches.size());
         }
-        return matchedHandlers;
+
+        return List.copyOf(matches);
     }
 }

@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.rafaelcosta</groupId>
     <artifactId>spring-mqttx-parent</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
     <packaging>pom</packaging>
     <name>spring-mqttx-parent</name>
     <description>Biblioteca MQTT para Spring Boot com publicação e assinatura por anotações.</description>

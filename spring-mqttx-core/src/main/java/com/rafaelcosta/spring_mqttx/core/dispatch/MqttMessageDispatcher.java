@@ -1,7 +1,6 @@
 package com.rafaelcosta.spring_mqttx.core.dispatch;
 
 import com.rafaelcosta.spring_mqttx.core.exception.MqttDispatchException;
-import com.rafaelcosta.spring_mqttx.core.handler.MqttMessageHandler;
 import com.rafaelcosta.spring_mqttx.core.logging.MqttLogSettings;
 import com.rafaelcosta.spring_mqttx.core.model.MqttInboundMessage;
 import org.slf4j.Logger;
@@ -26,31 +25,36 @@ public class MqttMessageDispatcher {
     }
 
     public void dispatch(MqttInboundMessage inboundMessage) {
-        List<MqttMessageHandler> handlers = registry.getHandlersByTopic(inboundMessage.topic());
+        List<MqttHandlerMatch> matches = registry.findHandlerMatches(inboundMessage.topic());
 
         if (logSettings.isDispatchEnabled() && log.isDebugEnabled()) {
             log.debug("Despachando mensagem MQTT: topico='{}', handlersEncontrados={}",
-                    inboundMessage.topic(), handlers.size());
+                    inboundMessage.topic(), matches.size());
         }
 
-        if (handlers.isEmpty()) {
+        if (matches.isEmpty()) {
             log.warn("Nenhum handler MQTT registrado para o topico '{}'. Mensagem recebida sera ignorada.",
                     inboundMessage.topic());
             return;
         }
 
         int index = 0;
-        for (MqttMessageHandler handler : handlers) {
+        for (MqttHandlerMatch match : matches) {
             try {
                 if (logSettings.isDispatchEnabled() && log.isTraceEnabled()) {
-                    log.trace("Executando dispatch MQTT: topico='{}', handlerIndex={}, handlerTipo='{}'",
-                            inboundMessage.topic(), index, handler.getClass().getName());
+                    log.trace("Executando dispatch MQTT: topico='{}', handlerIndex={}, handlerTipo='{}', filtro='{}', variaveis={}",
+                            inboundMessage.topic(), index, match.handler().getClass().getName(),
+                            match.subscription().subscriptionFilter(), match.matchResult().variables());
                 }
-                handler.handle(inboundMessage);
+                match.handler().handle(new MqttInboundMessage(
+                        inboundMessage.topic(),
+                        inboundMessage.message(),
+                        match.matchResult().variables()
+                ));
                 index++;
             } catch (Exception e) {
                 log.error("Falha ao despachar mensagem MQTT do topico '{}' para handler '{}': {}",
-                        inboundMessage.topic(), handler.getClass().getName(), e.getMessage(), e);
+                        inboundMessage.topic(), match.handler().getClass().getName(), e.getMessage(), e);
                 throw new MqttDispatchException("Erro ao despachar mensagem do tópico " + inboundMessage.topic(), e);
             }
         }

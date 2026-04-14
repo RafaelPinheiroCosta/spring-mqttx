@@ -2,16 +2,24 @@
 
 `spring-mqttx` é uma biblioteca para integração MQTT em aplicações Spring Boot usando anotações para publicação e assinatura de mensagens.
 
+A proposta é reduzir boilerplate sem esconder a base técnica do funcionamento MQTT. A biblioteca utiliza o Eclipse Paho para comunicação MQTT, Jackson para serialização de payloads e Spring Boot para auto-configuração, AOP e integração com o contexto da aplicação.
+
+---
+
 ## Estrutura do projeto
 
-- `spring-mqttx-core`: núcleo com serialização, dispatch de mensagens e gateway de publicação, sem dependência de Spring.
-- `spring-mqttx-starter`: módulo que a aplicação consumidora declara no `pom.xml`. Ele reúne auto-configuração, anotações, AOP e integração com Spring Boot.
+- `spring-mqttx-core`: núcleo com serialização, despacho de mensagens e definição de subscriptions, sem dependência de Spring
+- `spring-mqttx-starter`: módulo que a aplicação consumidora declara no `pom.xml`; reúne auto-configuração, anotações, AOP e integração com o contexto da aplicação
+
+---
 
 ## Requisitos
 
 - Java 17 ou superior
 - Spring Boot 3.3+ ou 4.x
 - Broker MQTT compatível com Eclipse Paho
+
+---
 
 ## Dependência
 
@@ -28,71 +36,48 @@ Adicione o repositório GitHub Packages e o starter da biblioteca no projeto con
 <dependency>
     <groupId>com.rafaelcosta</groupId>
     <artifactId>spring-mqttx-starter</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
 </dependency>
 ```
 
-## Uso do script em anexo para instalar a dependência
+---
 
-Como a biblioteca está publicada no **GitHub Packages**, o Maven precisa se autenticar para conseguir **baixar** a dependência.
+## Uso do script para instalar a dependência
 
-Em vez de pedir que o usuário edite manualmente o `settings.xml` do Maven, a biblioteca disponibiliza scripts que fazem isso de forma **temporária**, apenas durante o comando executado.
+Como a biblioteca está publicada no GitHub Packages, o Maven precisa se autenticar para conseguir baixar a dependência.
+
+Em vez de editar manualmente o `settings.xml`, a biblioteca disponibiliza scripts que fazem isso de forma temporária, apenas durante o comando executado.
 
 Esses scripts existem para:
 
-1. solicitar seu usuário do GitHub;
-2. solicitar seu token do GitHub;
-3. criar temporariamente um arquivo de autenticação do Maven;
-4. executar o comando Maven para baixar a biblioteca e continuar o build;
-5. remover automaticamente o arquivo temporário ao final.
+- solicitar seu usuário do GitHub
+- solicitar seu token do GitHub
+- criar temporariamente um arquivo de autenticação do Maven
+- executar o Maven
+- remover automaticamente o arquivo temporário ao final
 
-Isso evita deixar credenciais salvas permanentemente na máquina, o que é especialmente importante em computadores compartilhados.
+Isso evita deixar credenciais salvas permanentemente na máquina.
 
-## Passo a passo para baixar a biblioteca com o script
+### Passo a passo
 
-### 1. Adicione primeiro o repositório e a dependência no `pom.xml`
-
-Antes de executar qualquer script, o seu projeto já deve conter:
-
-- o bloco `<repositories>` apontando para o GitHub Packages;
-- a dependência `spring-mqttx-starter`.
+#### 1. Adicione primeiro o repositório e a dependência no `pom.xml`
 
 Sem isso, o Maven não saberá de onde baixar a biblioteca.
 
-### 2. Gere um token no GitHub
+#### 2. Gere um token no GitHub
 
-Você precisa de um **Personal Access Token (classic)** para o GitHub Packages.
-
-Caminho geral no GitHub:
-
-- **Settings**
-- **Developer settings**
-- **Personal access tokens**
-- **Tokens (classic)**
-- **Generate new token (classic)**
-
-Permissão mínima recomendada para o uso da biblioteca:
+Você precisa de um **Personal Access Token (classic)** com a permissão:
 
 - `read:packages`
 
-### 3. Execute o script correspondente ao seu sistema operacional
+#### 3. Execute o script correspondente ao seu sistema operacional
 
-Copie o arquivo que esta no seguinte link e cole na raiz do seu projeto:
+Copie o script da biblioteca para a raiz do projeto consumidor:
 
-- windows: https://github.com/RafaelPinheiroCosta/spring-mqttx/blob/master/use-github-packages.ps1;
-- linux/macOS: https://github.com/RafaelPinheiroCosta/spring-mqttx/blob/master/use-github-packages.sh;
-
-O script irá:
-
-- pedir seu usuário do GitHub;
-- pedir seu token;
-- gerar um arquivo temporário de autenticação;
-- executar o Maven;
-- apagar esse arquivo automaticamente ao final.
+- Windows: `use-github-packages.ps1`
+- Linux/macOS: `use-github-packages.sh`
 
 ### Windows
-
-Exemplo para baixar dependências e compilar o projeto:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File use-github-packages.ps1 -- ".\mvnw.cmd clean compile"
@@ -100,21 +85,16 @@ powershell -ExecutionPolicy Bypass -File use-github-packages.ps1 -- ".\mvnw.cmd 
 
 ### Linux/macOS
 
-Dê permissão de execução uma vez:
-
 ```bash
 chmod +x use-github-packages.sh
+./use-github-packages.sh ./mvnw clean compile
 ```
 
-Depois execute, por exemplo, para compilar:
-
-```bash
-use-github-packages.sh ./mvnw clean compile
-```
+---
 
 ## Configuração
 
-### application.yml
+## application.yml
 
 ```yaml
 mqtt:
@@ -128,14 +108,33 @@ mqtt:
   keep-alive-interval: 60
   connection-timeout: 30
   default-qos: 1
+
   ssl:
     enabled: false
+    protocol: TLS
     trust-store-location: classpath:certs/broker-truststore.p12
     trust-store-password: changeit
     trust-store-type: PKCS12
+
+    trust-certificate-location: classpath:certs/emqxsl-ca.crt
+    trust-certificate-format: AUTO
+
+    key-store-location: classpath:certs/client-keystore.p12
+    key-store-password: changeit
+    key-store-type: PKCS12
+    key-password: changeit
+
+  logs:
+    registry: true
+    subscription: true
+    publish: true
+    receive: true
+    payload: false
+    dispatch: true
+    invocation: true
 ```
 
-### application.properties
+## application.properties
 
 ```properties
 mqtt.enabled=true
@@ -148,36 +147,113 @@ mqtt.automatic-reconnect=true
 mqtt.keep-alive-interval=60
 mqtt.connection-timeout=30
 mqtt.default-qos=1
+
 mqtt.ssl.enabled=false
+mqtt.ssl.protocol=TLS
+mqtt.ssl.trust-store-location=classpath:certs/broker-truststore.p12
+mqtt.ssl.trust-store-password=changeit
+mqtt.ssl.trust-store-type=PKCS12
+
+mqtt.ssl.trust-certificate-location=classpath:certs/emqxsl-ca.crt
+mqtt.ssl.trust-certificate-format=AUTO
+
+mqtt.ssl.key-store-location=classpath:certs/client-keystore.p12
+mqtt.ssl.key-store-password=changeit
+mqtt.ssl.key-store-type=PKCS12
+mqtt.ssl.key-password=changeit
+
+mqtt.logs.registry=true
+mqtt.logs.subscription=true
+mqtt.logs.publish=true
+mqtt.logs.receive=true
+mqtt.logs.payload=false
+mqtt.logs.dispatch=true
+mqtt.logs.invocation=true
+```
+
+---
+
+## Configuração SSL/TLS
+
+A biblioteca suporta **duas abordagens** para material de confiança:
+
+### 1. Truststore tradicional
+
+Exemplo:
+
+```properties
+mqtt.ssl.enabled=true
 mqtt.ssl.trust-store-location=classpath:certs/broker-truststore.p12
 mqtt.ssl.trust-store-password=changeit
 mqtt.ssl.trust-store-type=PKCS12
 ```
 
-### Propriedades disponíveis
+### 2. Certificado CA cru
+
+Agora também é possível usar diretamente:
+
+- `.crt`
+- `.cer`
+- `.pem`
+- `.der`
+
+Exemplo:
+
+```properties
+mqtt.ssl.enabled=true
+mqtt.ssl.trust-certificate-location=classpath:certs/emqxsl-ca.crt
+mqtt.ssl.trust-certificate-format=AUTO
+```
+
+Formatos aceitos em `trust-certificate-format`:
+
+- `AUTO`
+- `PEM`
+- `DER`
+
+### Prioridade interna
+
+A biblioteca resolve o material de confiança nesta ordem:
+
+1. `mqtt.ssl.trust-certificate-location`
+2. `mqtt.ssl.trust-store-location`
+3. truststore padrão da JVM
+
+---
+
+## Propriedades disponíveis
 
 | Propriedade | Descrição |
 |---|---|
-| `mqtt.enabled` | Ativa ou desativa a auto-configuração da biblioteca. |
-| `mqtt.broker-url` | URL de conexão do broker MQTT. |
-| `mqtt.client-id` | Client ID do cliente MQTT. Quando omitido, a biblioteca gera um valor automaticamente. |
-| `mqtt.username` | Usuário do broker. |
-| `mqtt.password` | Senha do broker. |
-| `mqtt.clean-session` | Define o comportamento de sessão limpa. |
-| `mqtt.automatic-reconnect` | Ativa reconexão automática no cliente MQTT. |
-| `mqtt.keep-alive-interval` | Intervalo de keep alive em segundos. |
-| `mqtt.connection-timeout` | Tempo limite de conexão em segundos. |
-| `mqtt.default-qos` | QoS padrão usado pela aplicação quando fizer sentido para a estratégia adotada. |
-| `mqtt.ssl.enabled` | Ativa configuração SSL/TLS para o cliente MQTT. |
-| `mqtt.ssl.trust-store-location` | Local do truststore. Pode ser `classpath:` ou caminho absoluto. |
-| `mqtt.ssl.trust-store-password` | Senha do truststore. |
-| `mqtt.ssl.trust-store-type` | Tipo do truststore, por padrão `PKCS12`. |
+| `mqtt.enabled` | Ativa ou desativa a auto-configuração da biblioteca |
+| `mqtt.broker-url` | URL de conexão do broker MQTT |
+| `mqtt.client-id` | Client ID do cliente MQTT; quando omitido, a biblioteca gera um valor automaticamente |
+| `mqtt.username` | Usuário do broker |
+| `mqtt.password` | Senha do broker |
+| `mqtt.clean-session` | Define o comportamento de sessão limpa |
+| `mqtt.automatic-reconnect` | Ativa reconexão automática |
+| `mqtt.keep-alive-interval` | Intervalo de keep alive em segundos |
+| `mqtt.connection-timeout` | Tempo limite de conexão em segundos |
+| `mqtt.default-qos` | QoS padrão usado pela aplicação |
+| `mqtt.ssl.enabled` | Ativa configuração SSL/TLS |
+| `mqtt.ssl.protocol` | Protocolo SSL/TLS a ser usado, por padrão `TLS` |
+| `mqtt.ssl.trust-store-location` | Local do truststore (`classpath:` ou caminho absoluto) |
+| `mqtt.ssl.trust-store-password` | Senha do truststore |
+| `mqtt.ssl.trust-store-type` | Tipo do truststore, por padrão `PKCS12` |
+| `mqtt.ssl.trust-certificate-location` | Local do certificado CA cru |
+| `mqtt.ssl.trust-certificate-format` | Formato do certificado cru: `AUTO`, `PEM` ou `DER` |
+| `mqtt.ssl.key-store-location` | Local do keystore de cliente |
+| `mqtt.ssl.key-store-password` | Senha do keystore |
+| `mqtt.ssl.key-store-type` | Tipo do keystore |
+| `mqtt.ssl.key-password` | Senha da chave privada do keystore |
+
+---
 
 ## API pública
 
-### `@MqttPublisher`
+## `@MqttPublisher`
 
-Anotação aplicada em métodos cuja resposta deve ser publicada em um tópico MQTT.
+Anotação aplicada em métodos cujo retorno deve ser publicado em um tópico MQTT.
 
 ```java
 import com.rafaelcosta.spring_mqttx.domain.annotation.MqttPublisher;
@@ -197,7 +273,7 @@ public class SensorPublisher {
 
 Quando o método retorna um valor não nulo, o aspecto publica esse conteúdo no tópico configurado.
 
-### `@MqttSubscriber`
+## `@MqttSubscriber`
 
 Anotação aplicada em métodos que devem receber mensagens de um tópico MQTT.
 
@@ -218,48 +294,107 @@ public class SensorSubscriber {
 }
 ```
 
+## Wildcard MQTT
+
+Agora a biblioteca suporta inscrições com:
+
+- `+`
+- `#`
+
+Exemplos:
+
+```java
+@MqttSubscriber("devices/+/state")
+public void receberEstado(String payload) {
+    System.out.println(payload);
+}
+```
+
+```java
+@MqttSubscriber("devices/#")
+public void receberTudo(String payload) {
+    System.out.println(payload);
+}
+```
+
+## Placeholders declarativos
+
+A biblioteca também suporta placeholders em tópicos:
+
+```java
+@MqttSubscriber("devices/{deviceId}/state")
+public void receber(@MqttPayload DeviceState payload) {
+    System.out.println(payload);
+}
+```
+
+Internamente, a biblioteca converte esse padrão para um filtro MQTT válido na inscrição do broker e usa o padrão original para fazer o matching do tópico recebido.
+
+## `@MqttTopicParam`
+
+A partir desta versão, é possível extrair variáveis do tópico diretamente nos parâmetros do método:
+
+```java
+import com.rafaelcosta.spring_mqttx.domain.annotation.MqttPayload;
+import com.rafaelcosta.spring_mqttx.domain.annotation.MqttSubscriber;
+import com.rafaelcosta.spring_mqttx.domain.annotation.MqttTopicParam;
+import org.springframework.stereotype.Component;
+
+@Component
+public class DeviceSubscriber {
+
+    @MqttSubscriber("devices/{deviceId}/sensor/{sensorId}/state")
+    public void receber(@MqttTopicParam("deviceId") String deviceId,
+                        @MqttTopicParam("sensorId") Integer sensorId,
+                        @MqttPayload DeviceState payload) {
+        System.out.println(deviceId + " / " + sensorId + " -> " + payload);
+    }
+
+    public record DeviceState(String power, String mode, int r, int g, int b) {}
+}
+```
+
+Tipos suportados para `@MqttTopicParam`:
+
+- `String`
+- `int` / `Integer`
+- `long` / `Long`
+- `boolean` / `Boolean`
+- `double` / `Double`
+- `float` / `Float`
+- `short` / `Short`
+- `byte` / `Byte`
+
 ## Resolução de argumentos em subscribers
 
 A biblioteca resolve parâmetros de métodos anotados com `@MqttSubscriber` da seguinte forma:
 
-- parâmetro anotado com `@MqttPayload`: desserializa o payload para o tipo declarado;
-- `String`: recebe o payload como texto UTF-8;
-- `byte[]`: recebe o payload bruto;
-- `MqttMessage`: recebe a mensagem do Eclipse Paho;
-- outros tipos não suportados: recebem `null`.
+- parâmetro anotado com `@MqttPayload`: desserializa o payload para o tipo declarado
+- parâmetro anotado com `@MqttTopicParam("...")`: extrai o valor do placeholder correspondente no tópico recebido
+- `String`: recebe o payload como texto UTF-8
+- `byte[]`: recebe o payload bruto
+- `MqttMessage`: recebe a mensagem do Eclipse Paho
+- tipos não suportados: recebem `null`
 
 ## Como a biblioteca funciona
 
-1. O starter registra a auto-configuração se `mqtt.enabled=true`.
-2. Um cliente MQTT é criado usando `MqttProperties`.
-3. Métodos anotados com `@MqttSubscriber` são encontrados no contexto Spring e registrados no `MqttHandlerRegistry`.
-4. O callback do cliente MQTT envia mensagens recebidas para o `MqttMessageDispatcher`.
-5. Métodos anotados com `@MqttPublisher` publicam o retorno automaticamente por meio do `MqttPublishingGateway`.
-
-## GitHub Actions
-
-O workflow em `.github/workflows/publish.yml` executa validação em matriz para:
-
-- Java 17 com Spring Boot 3.5.6
-- Java 21 com Spring Boot 3.5.6
-- Java 17 com Spring Boot 4.0.5
-- Java 25 com Spring Boot 4.0.5
-
-Na criação de uma release no GitHub, o mesmo workflow também faz o `deploy` para o GitHub Packages.
-
-## Testes incluídos
-
-O projeto já possui testes automatizados para os componentes centrais da biblioteca:
-
-- serialização de payload;
-- dispatch de mensagens;
-- publicação condicional com verificação de conexão;
-- invocação de handlers Spring;
-- carregamento da auto-configuração.
+- O starter registra a auto-configuração se `mqtt.enabled=true`
+- Um cliente MQTT é criado usando `MqttProperties`
+- Métodos anotados com `@MqttSubscriber` são encontrados no contexto Spring e registrados no `MqttHandlerRegistry`
+- O callback do cliente MQTT envia mensagens recebidas para o `MqttMessageDispatcher`
+- O dispatcher encontra subscriptions compatíveis por:
+    - tópico literal
+    - wildcard MQTT
+    - placeholder declarativo
+- O `SpringMqttMethodHandler` resolve:
+    - payload
+    - parâmetros do tópico
+    - tipos brutos
+- Métodos anotados com `@MqttPublisher` publicam o retorno automaticamente por meio do `MqttPublishingGateway`
 
 ## Logs opcionais por grupo
 
-A biblioteca expõe grupos de logs opcionais, todos desabilitados por padrão. Os logs indispensáveis de ciclo de vida, conexão, falhas operacionais e reconexão continuam ativos em `INFO`, `WARN` ou `ERROR`.
+A biblioteca expõe grupos de logs opcionais, todos desabilitados por padrão. Logs indispensáveis de ciclo de vida, conexão, falhas operacionais e reconexão continuam ativos em `INFO`, `WARN` ou `ERROR`.
 
 Exemplo em `application.properties`:
 
@@ -289,28 +424,29 @@ mqtt:
 
 Grupos disponíveis:
 
-- `mqtt.logs.registry`: descoberta e registro de métodos `@MqttSubscriber` e `@MqttPublisher`
-- `mqtt.logs.subscription`: inscrições em tópicos e configuração do callback
-- `mqtt.logs.publish`: interceptação de publishers, publicação e confirmação de entrega
-- `mqtt.logs.receive`: recebimento de mensagens no callback MQTT
-- `mqtt.logs.payload`: preview do conteúdo do payload em `TRACE`
-- `mqtt.logs.dispatch`: despacho das mensagens para handlers
-- `mqtt.logs.invocation`: resolução de argumentos e invocação dos métodos anotados
+- `mqtt.logs.registry`
+- `mqtt.logs.subscription`
+- `mqtt.logs.publish`
+- `mqtt.logs.receive`
+- `mqtt.logs.payload`
+- `mqtt.logs.dispatch`
+- `mqtt.logs.invocation`
 
 ## Teste rápido da biblioteca
 
-Para testar a biblioteca, crie primeiro um projeto Spring Boot simples e adicione a dependência da biblioteca no `pom.xml`.
+Crie primeiro um projeto Spring Boot simples e adicione a dependência da biblioteca no `pom.xml`.
 
-Depois disso, tenha um broker MQTT local instalado. Para os testes iniciais, pode usar o Mosquitto.
+Depois disso, tenha um broker MQTT disponível. Para testes iniciais, pode usar Mosquitto ou EMQX.
 
-Com o broker rodando localmente, configure sua aplicação para conectar nele:
+Com o broker rodando, configure sua aplicação:
 
 ```properties
+mqtt.enabled=true
 mqtt.broker-url=tcp://localhost:1883
 mqtt.client-id=teste-app
 ```
 
-Agora crie uma classe de teste como esta:
+Agora crie uma classe de teste:
 
 ```java
 @RestController
@@ -332,106 +468,91 @@ public class TesteMqtt {
 }
 ```
 
-### O que esse exemplo faz
+### Testando a inscrição em tópico
 
-O método `gerarStatus()` recebe uma requisição HTTP POST e publica automaticamente o retorno no tópico MQTT `sensores/rest/status`.
-
-O método `receber()` fica inscrito no tópico `sensores/mqtt/status` e imprime no console toda mensagem recebida e convertida para o tipo `SensorStatus`.
-
----
-
-## Testando a inscrição em tópico
-
-Para testar se a aplicação está realmente inscrita no tópico `sensores/mqtt/status`, envie uma mensagem manualmente pelo terminal.
-
-### Windows - CMD
-
+#### Windows - CMD
 ```cmd
 mosquitto_pub -h localhost -t sensores/mqtt/status -m "{\"status\":\"ok\",\"temperatura\":25.0}"
 ```
 
-### Windows - PowerShell
-
+#### Windows - PowerShell
 ```powershell
 mosquitto_pub -h localhost -t sensores/mqtt/status -m '{"status":"ok","temperatura":25.0}'
 ```
 
-### Linux
-
+#### Linux
 ```bash
 mosquitto_pub -h localhost -t sensores/mqtt/status -m '{"status":"ok","temperatura":25.0}'
 ```
 
-Se tudo estiver correto, a aplicação receberá a mensagem e imprimirá no console algo como:
+### Testando a publicação MQTT
 
-```text
-SensorStatus[status=ok, temperatura=25.0]
-```
-
----
-
-## Testando a publicação MQTT
-
-Para testar a publicação, abra uma janela de terminal separada e fique escutando o tópico `sensores/rest/status`.
-
-### Windows
-
+#### Windows
 ```cmd
 mosquitto_sub -h localhost -t sensores/rest/status
 ```
 
-### Linux
-
+#### Linux
 ```bash
 mosquitto_sub -h localhost -t sensores/rest/status
 ```
 
-Deixe essa janela aberta.
+Depois faça um `POST` para:
 
-Agora, com a aplicação rodando, use o Postman para fazer uma requisição:
+```text
+http://localhost:8080/mqtt/publish
+```
 
-- método: POST
-- URL: http://localhost:8080/mqtt/publish
+## Teste rápido com placeholder
 
-Quando a requisição for executada, o método `gerarStatus()` será chamado, e o retorno será publicado no tópico MQTT `sensores/rest/status`.
+```java
+@Component
+public class DeviceStateSubscriber {
 
-Na janela onde o `mosquitto_sub` está rodando, você verá a mensagem recebida.
+    @MqttSubscriber("devices/{deviceId}/state")
+    public void receber(@MqttTopicParam("deviceId") String deviceId,
+                        @MqttPayload DeviceState payload) {
+        System.out.println(deviceId + " -> " + payload);
+    }
 
----
+    public record DeviceState(String power, String mode, int r, int g, int b) {}
+}
+```
 
-## Resumo do teste
+Publique uma mensagem em:
 
-Use o `mosquitto_pub` para testar se a aplicação consegue receber mensagens MQTT.
+```text
+devices/iot01/state
+```
 
-Use o `mosquitto_sub` junto com o Postman para testar se a aplicação consegue publicar mensagens MQTT.
+e a aplicação deverá resolver:
 
-Assim você valida, de forma simples:
+- `deviceId = "iot01"`
+- payload desserializado normalmente
 
-- consumo de mensagens MQTT
-- publicação de mensagens MQTT
-- serialização e desserialização do payload
-- funcionamento das anotações `@MqttSubscriber` e `@MqttPublisher`
+## GitHub Actions
 
+O workflow em `.github/workflows/publish.yml` executa validação em matriz para combinações de Java e Spring Boot, e na criação de uma release no GitHub faz o deploy para o GitHub Packages.
+
+## Testes incluídos
+
+O projeto possui testes automatizados para:
+
+- serialização de payload
+- dispatch de mensagens
+- publicação condicional com verificação de conexão
+- invocação de handlers Spring
+- carregamento da auto-configuração
+- matching de tópicos com wildcard e placeholder
+- injeção de parâmetros com `@MqttTopicParam`
+- construção de material de confiança SSL/TLS
 
 ## Conclusão
 
 A proposta da biblioteca é simplificar a integração MQTT em aplicações Spring Boot sem esconder a base técnica usada internamente.
 
-Ela se apoia no **Eclipse Paho** para a comunicação MQTT e no **Jackson** para conversão de payloads, enquanto o Spring Boot fornece a auto-configuração, AOP e a integração com o contexto da aplicação.
-
-Mesmo com essa abstração, o uso em produção exige validação técnica. É importante testar:
-
-- conexão com o broker;
-- serialização e desserialização dos payloads;
-- recebimento correto em subscribers;
-- publicação correta em publishers;
-- comportamento de reconexão;
-- compatibilidade com a versão de Java e Spring Boot adotada no projeto.
-
-Em outras palavras, a biblioteca reduz código repetitivo e organiza a integração, mas não substitui testes de integração, testes com broker real e validação do cenário específico da aplicação.
+Ela reduz código repetitivo, organiza a integração e evolui o suporte declarativo para cenários mais próximos de produção, mas não substitui testes de integração com broker real, validação de payloads, cenários de reconexão e testes com o ambiente específico da aplicação.
 
 ## Licença
 
-Este projeto está licenciado sob a licença MIT. Consulte o arquivo `LICENSE`.
-
-
+Este projeto está licenciado sob a licença MIT.
